@@ -103,13 +103,13 @@ function Promptpage() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.screenWhite,
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   promptBox: {
-    backgroundColor: colors.screenWhite,
+    backgroundColor: colors.primary,
     borderRadius: 25,
     width: 375,
     height: 250,
@@ -126,6 +126,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   text: {
+    color: colors.white,
     textAlign: "center",
     fontSize: 25,
   },

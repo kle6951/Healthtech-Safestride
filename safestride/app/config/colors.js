@@ -1,7 +1,7 @@
 // export default objects
 export default {
   primary: "#787FF6",
-  secondary: "#1CA7EC",
+  secondary: "#fdaa4e",
   screenWhite: "#f8f8f4",
   white: "#ffff",
   grey: "#6e6969",

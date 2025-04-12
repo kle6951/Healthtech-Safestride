@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
@@ -12,6 +12,15 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import colors from "../config/colors";
 
 function Quizpage() {
+  const [selectedChoice, setSelectedChoice] = useState(null);
+
+  const choices = [
+    { id: "A", text: "A. Berlin" },
+    { id: "B", text: "B. Madrid" },
+    { id: "C", text: "C. Paris" },
+    { id: "D", text: "D. Beijing" },
+  ];
+
   return (
     <Screen style={styles.container}>
       {/* Top Row */}
@@ -42,21 +51,30 @@ function Quizpage() {
       <AppText style={styles.question}>What is the capital of France?</AppText>
 
       {/* Choices */}
-      <Pressable style={styles.choiceBox}>
-        <AppText style={styles.choiceText}>A. Berlin</AppText>
-      </Pressable>
+      {choices.map((choice) => (
+        <Pressable
+          key={choice.id}
+          style={[
+            styles.choiceBox,
+            selectedChoice === choice.id && {
+              backgroundColor: colors.secondary,
+              borderColor: colors.secondary,
+            },
+          ]}
+          onPress={() => setSelectedChoice(choice.id)}
+        >
+          <AppText
+            style={[
+              styles.choiceText,
+              selectedChoice === choice.id && { color: "#fff" },
+            ]}
+          >
+            {choice.text}
+          </AppText>
+        </Pressable>
+      ))}
 
-      <Pressable style={styles.choiceBox}>
-        <AppText style={styles.choiceText}>B. Madrid</AppText>
-      </Pressable>
-
-      <Pressable style={styles.choiceBox}>
-        <AppText style={styles.choiceText}>C. Paris</AppText>
-      </Pressable>
-
-      <Pressable style={styles.choiceBox}>
-        <AppText style={styles.choiceText}>D. Bejing</AppText>
-      </Pressable>
+      {/* Go Back */}
       <TouchableOpacity
         onPress={() => console.log("Go back to previous question")}
       >
@@ -114,7 +132,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   progressBar: {
-    width: "40%", // Update this dynamically as needed
+    width: "40%",
     height: "100%",
     backgroundColor: colors.primary,
   },
@@ -135,7 +153,7 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   choiceText: {
-    fontSize: 22,
+    fontSize: 25,
     color: "#333",
   },
 });

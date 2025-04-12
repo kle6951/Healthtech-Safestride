@@ -1,5 +1,11 @@
 import React from "react";
-import { StyleSheet, View, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Text,
+  Pressable,
+} from "react-native";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -8,6 +14,7 @@ import colors from "../config/colors";
 function Quizpage() {
   return (
     <Screen style={styles.container}>
+      {/* Top Row */}
       <View style={styles.topRow}>
         <TouchableOpacity
           onPress={() => console.log("back")}
@@ -25,6 +32,36 @@ function Quizpage() {
           <AppText style={styles.text}>Skip</AppText>
         </TouchableOpacity>
       </View>
+
+      {/* Progress Bar */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBar} />
+      </View>
+
+      {/* Question */}
+      <AppText style={styles.question}>What is the capital of France?</AppText>
+
+      {/* Choices */}
+      <Pressable style={styles.choiceBox}>
+        <AppText style={styles.choiceText}>A. Berlin</AppText>
+      </Pressable>
+
+      <Pressable style={styles.choiceBox}>
+        <AppText style={styles.choiceText}>B. Madrid</AppText>
+      </Pressable>
+
+      <Pressable style={styles.choiceBox}>
+        <AppText style={styles.choiceText}>C. Paris</AppText>
+      </Pressable>
+
+      <Pressable style={styles.choiceBox}>
+        <AppText style={styles.choiceText}>D. Bejing</AppText>
+      </Pressable>
+      <TouchableOpacity
+        onPress={() => console.log("Go back to previous question")}
+      >
+        <Text style={styles.goBackText}>← Go back to previous question</Text>
+      </TouchableOpacity>
     </Screen>
   );
 }
@@ -35,18 +72,27 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 20,
   },
+  goBackText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.secondary,
+    textAlign: "center",
+    marginTop: 20,
+    textDecorationLine: "underline",
+  },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     position: "relative",
+    marginBottom: 20,
   },
   centeredTitle: {
     position: "absolute",
     left: 0,
     right: 0,
     alignItems: "center",
-    zIndex: -1, 
+    zIndex: -1,
   },
   text: {
     fontSize: 25,
@@ -58,6 +104,39 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.primary,
     textAlign: "center",
+  },
+  progressContainer: {
+    height: 20,
+    width: "100%",
+    backgroundColor: "#e0e0e0",
+    borderRadius: 10,
+    overflow: "hidden",
+    marginBottom: 30,
+  },
+  progressBar: {
+    width: "40%", // Update this dynamically as needed
+    height: "100%",
+    backgroundColor: colors.primary,
+  },
+  question: {
+    fontSize: 35,
+    fontWeight: "600",
+    marginBottom: 30,
+  },
+  choiceBox: {
+    backgroundColor: "#f8f8f8",
+    paddingVertical: 25,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    justifyContent: "center",
+    minHeight: 80,
+  },
+  choiceText: {
+    fontSize: 22,
+    color: "#333",
   },
 });
 

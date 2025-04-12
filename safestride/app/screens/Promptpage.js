@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 25,
     width: 375,
-    height: 250,
+    height: 400,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 30,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   text: {
     color: colors.white,
     textAlign: "center",
-    fontSize: 25,
+    fontSize: 35,
   },
   buttonRow: {
     flexDirection: "row",

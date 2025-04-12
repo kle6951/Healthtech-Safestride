@@ -1,1 +1,2 @@
-# Healthtech-Safestride
+# Healthtech-SmartStride
+#### Team 1

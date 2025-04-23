@@ -112,6 +112,31 @@ function Quizpage({ navigation }) {
     }
   };
 
+  const handleSkip = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setSelectedChoice(answers[currentQuestionIndex + 1] || null);
+    } else {
+      Alert.alert("Submit Quiz?", "Are you ready to submit your answers?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Submit",
+          style: "default",
+          onPress: () => {
+            const score = questions.reduce((acc, q, i) => {
+              return answers[i] === q.answer ? acc + 1 : acc;
+            }, 0);
+            Alert.alert(
+              "Quiz Submitted",
+              `You scored ${score} / ${questions.length}`
+            );
+            navigation.navigate("Entry");
+          },
+        },
+      ]);
+    }
+  };
+
   return (
     <Screen style={styles.container}>
       {/* Top Row */}
@@ -141,7 +166,7 @@ function Quizpage({ navigation }) {
           <AppText style={styles.title}>Assessment</AppText>
         </View>
 
-        <TouchableOpacity onPress={() => console.log("skip")}>
+        <TouchableOpacity onPress={handleSkip}>
           <AppText style={styles.text}>Skip</AppText>
         </TouchableOpacity>
       </View>

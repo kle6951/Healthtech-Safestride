@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     alignItems: "center",
-    transform: [{ translateY: -85 }], // Moves the content up by 50 units
+    transform: [{ translateY: -85 }], 
   },
   text: {
     color: colors.primary,

@@ -1,14 +1,24 @@
 import React from "react";
 import Screen from "../components/Screen";
 import colors from "../config/colors";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
 import LottieView from "lottie-react-native";
 import AppText from "../components/AppText";
 import AppButton from "../components/AppButton";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 function Entrypage({ navigation }) {
   return (
     <Screen style={styles.container}>
+      <TouchableOpacity
+        style={styles.closeIcon}
+        onPress={() => navigation.navigate("Welcome")}
+        activeOpacity={0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <AntDesign name="closecircle" size={45} color={colors.secondary} />
+      </TouchableOpacity>
+
       <AppText style={styles.text}>Have you taken the assessment test?</AppText>
 
       <LottieView
@@ -41,6 +51,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  closeIcon: {
+    position: "absolute",
+    top: 5,
+    left: 20,
+    zIndex: 10,
   },
   text: {
     color: colors.primary,

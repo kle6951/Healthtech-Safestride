@@ -1,32 +1,136 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
   TouchableOpacity,
   Text,
   Pressable,
+  Alert,
+  Animated,
 } from "react-native";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import colors from "../config/colors";
 
-function Quizpage() {
-  const [selectedChoice, setSelectedChoice] = useState(null);
+const questions = [
+  {
+    id: 1,
+    question: "What is the capital of France?",
+    choices: ["A. Berlin", "B. Madrid", "C. Paris", "D. Beijing"],
+    answer: "C",
+  },
+  {
+    id: 2,
+    question: "Which planet is closest to the Sun?",
+    choices: ["A. Venus", "B. Mercury", "C. Mars", "D. Earth"],
+    answer: "B",
+  },
+  {
+    id: 3,
+    question: "What gas do plants absorb?",
+    choices: ["A. Oxygen", "B. Carbon Dioxide", "C. Nitrogen", "D. Hydrogen"],
+    answer: "B",
+  },
+  {
+    id: 4,
+    question: "Who wrote Hamlet?",
+    choices: ["A. Dickens", "B. Tolstoy", "C. Shakespeare", "D. Twain"],
+    answer: "C",
+  },
+  {
+    id: 5,
+    question: "How many continents are there?",
+    choices: ["A. 5", "B. 6", "C. 7", "D. 8"],
+    answer: "C",
+  },
+];
 
-  const choices = [
-    { id: "A", text: "A. Berlin" },
-    { id: "B", text: "B. Madrid" },
-    { id: "C", text: "C. Paris" },
-    { id: "D", text: "D. Beijing" },
-  ];
+function Quizpage({ navigation }) {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedChoice, setSelectedChoice] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const progress = useRef(new Animated.Value(0)).current;
+
+  const currentQuestion = questions[currentQuestionIndex];
+
+  const animateProgress = (toValue) => {
+    Animated.timing(progress, {
+      toValue,
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  useEffect(() => {
+    const targetProgress = (currentQuestionIndex + 1) / questions.length;
+    animateProgress(targetProgress);
+  }, [currentQuestionIndex]);
+
+  const handleSelect = (choiceId) => {
+    setSelectedChoice(choiceId);
+    setAnswers({ ...answers, [currentQuestionIndex]: choiceId });
+  };
+
+  const handleNext = () => {
+    if (selectedChoice === null) {
+      Alert.alert(
+        "Select an answer",
+        "Please choose an option before continuing."
+      );
+      return;
+    }
+
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setSelectedChoice(answers[currentQuestionIndex + 1] || null);
+    } else {
+      Alert.alert("Submit Quiz?", "Are you ready to submit your answers?", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Submit",
+          style: "default",
+          onPress: () => {
+            const score = questions.reduce((acc, q, i) => {
+              return answers[i] === q.answer ? acc + 1 : acc;
+            }, 0);
+            Alert.alert(
+              "Quiz Submitted",
+              `You scored ${score} / ${questions.length}`
+            );
+            navigation.navigate("Entry");
+          },
+        },
+      ]);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      setSelectedChoice(answers[currentQuestionIndex - 1] || null);
+    }
+  };
 
   return (
     <Screen style={styles.container}>
       {/* Top Row */}
       <View style={styles.topRow}>
         <TouchableOpacity
-          onPress={() => console.log("back")}
+          onPress={() =>
+            Alert.alert(
+              "Quit Quiz?",
+              "Are you sure you want to exit the quiz? Your progress will be lost.",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Yes, Quit",
+                  style: "destructive",
+                  onPress: () => navigation.navigate("Entry"),
+                },
+              ]
+            )
+          }
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
@@ -44,42 +148,71 @@ function Quizpage() {
 
       {/* Progress Bar */}
       <View style={styles.progressContainer}>
-        <View style={styles.progressBar} />
+        <Animated.View
+          style={[
+            styles.progressBar,
+            {
+              width: progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["0%", "100%"],
+              }),
+            },
+          ]}
+        />
       </View>
 
       {/* Question */}
-      <AppText style={styles.question}>What is the capital of France?</AppText>
+      <AppText style={styles.question}>{currentQuestion.question}</AppText>
 
       {/* Choices */}
-      {choices.map((choice) => (
-        <Pressable
-          key={choice.id}
-          style={[
-            styles.choiceBox,
-            selectedChoice === choice.id && {
-              backgroundColor: colors.secondary,
-              borderColor: colors.secondary,
-            },
-          ]}
-          onPress={() => setSelectedChoice(choice.id)}
-        >
-          <AppText
+      {currentQuestion.choices.map((choiceText, index) => {
+        const choiceId = choiceText[0]; // "A", "B", etc.
+        const isSelected = selectedChoice === choiceId;
+        return (
+          <Pressable
+            key={choiceId}
             style={[
-              styles.choiceText,
-              selectedChoice === choice.id && { color: "#fff" },
+              styles.choiceBox,
+              isSelected && {
+                backgroundColor: colors.secondary,
+                borderColor: colors.secondary,
+              },
+            ]}
+            onPress={() => handleSelect(choiceId)}
+          >
+            <AppText
+              style={[styles.choiceText, isSelected && { color: "#fff" }]}
+            >
+              {choiceText}
+            </AppText>
+          </Pressable>
+        );
+      })}
+
+      {/* Navigation Buttons */}
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          onPress={handleBack}
+          disabled={currentQuestionIndex === 0}
+        >
+          <Text
+            style={[
+              styles.goBackText,
+              currentQuestionIndex === 0 && { color: "#aaa" },
             ]}
           >
-            {choice.text}
-          </AppText>
-        </Pressable>
-      ))}
+            ← Previous
+          </Text>
+        </TouchableOpacity>
 
-      {/* Go Back */}
-      <TouchableOpacity
-        onPress={() => console.log("Go back to previous question")}
-      >
-        <Text style={styles.goBackText}>← Go back to previous question</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleNext}>
+          <Text style={styles.goBackText}>
+            {currentQuestionIndex === questions.length - 1
+              ? "Submit →"
+              : "Next →"}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </Screen>
   );
 }
@@ -97,6 +230,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
     textDecorationLine: "underline",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    paddingHorizontal: 10,
   },
   topRow: {
     flexDirection: "row",
@@ -132,12 +271,11 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   progressBar: {
-    width: "40%",
     height: "100%",
     backgroundColor: colors.primary,
   },
   question: {
-    fontSize: 35,
+    fontSize: 30,
     fontWeight: "600",
     marginBottom: 30,
   },

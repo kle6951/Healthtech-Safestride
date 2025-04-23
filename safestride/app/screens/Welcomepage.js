@@ -10,7 +10,7 @@ import AppText from "../components/AppText";
 import colors from "../config/colors";
 import LottieView from "lottie-react-native";
 
-function Welcomepage() {
+function Welcomepage({ navigation }) {
   return (
     <ImageBackground
       source={require("../../assets/Main.png")}
@@ -27,7 +27,7 @@ function Welcomepage() {
             Striving to improve cognitive health in the community
           </AppText>
           <TouchableOpacity
-            onPress={() => console.log("press")}
+            onPress={() => navigation.navigate("Entry")}
             activeOpacity={0.7}
           >
             <LottieView

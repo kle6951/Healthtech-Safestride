@@ -6,6 +6,6 @@ export default {
   text: {
     color: colors.darkGrey,
     fontSize: 20,
-    fontFamily: Platform.OS === "android" ? "Roboto" : "montserrat",
+    fontFamily: Platform.OS === "android" ? "Roboto" : "Open Sans",
   },
 };

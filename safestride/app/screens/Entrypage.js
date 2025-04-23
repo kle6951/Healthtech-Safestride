@@ -6,7 +6,7 @@ import LottieView from "lottie-react-native";
 import AppText from "../components/AppText";
 import AppButton from "../components/AppButton";
 
-function Entrypage() {
+function Entrypage({ navigation }) {
   return (
     <Screen style={styles.container}>
       <AppText style={styles.text}>Have you taken the assessment test?</AppText>
@@ -21,7 +21,7 @@ function Entrypage() {
       <View style={styles.buttonRow}>
         <AppButton
           title="NO"
-          onPress={() => console.log("NO pressed")}
+          onPress={() => navigation.navigate("Quiz")}
           style={styles.button}
         />
         <AppButton

@@ -1,4 +1,4 @@
-    🚶‍♂️ SmartStride
+    🚶‍♂️ #SMARTSTRIDE
 SmartStride is a mobile health app designed to help older adults improve both their cognitive and motor functions through dual-task training. By combining walking exercises with adaptive cognitive challenges, SmartStride supports safer mobility, sharper memory, and greater independence in daily life.
 
 

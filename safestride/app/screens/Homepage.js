@@ -1,27 +1,72 @@
 import React from "react";
-import { ImageBackground, StyleSheet, View } from "react-native";
+import { View, Dimensions, ImageBackground, StyleSheet } from "react-native";
+import { PieChart } from "react-native-chart-kit";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import colors from "../config/colors";
 import AppText from "../components/AppText";
 import Screen from "../components/Screen";
+import colors from "../config/colors";
+
+const screenWidth = Dimensions.get("window").width;
 
 function Homepage() {
+  const pieData = [
+    {
+      name: "Recall",
+      population: 40,
+      color: "#47b39c",
+      legendFontColor: "#333",
+      legendFontSize: wp("3.8%"),
+    },
+    {
+      name: "Count",
+      population: 35,
+      color: "#ffc154",
+      legendFontColor: "#333",
+      legendFontSize: wp("3.8%"),
+    },
+    {
+      name: "Sensory",
+      population: 25,
+      color: "#fc6b56",
+      legendFontColor: "#333",
+      legendFontSize: wp("3.8%"),
+    },
+  ];
+
   return (
     <ImageBackground
       source={require("../../assets/Homepage.png")}
       style={styles.background}
       resizeMode="cover"
     >
-      {/* App name at the top center */}
       <AppText style={styles.name}>SmartStride</AppText>
 
       <Screen style={styles.overlay}>
         <View style={styles.centerContent}>
           <AppText style={styles.text}>Welcome Back!</AppText>
           <AppText style={styles.subtitle}>Keep Going - Don't give up</AppText>
+
+          {/* Pie Chart */}
+          <View style={styles.chartContainer}>
+            <PieChart
+              data={pieData}
+              width={screenWidth}
+              height={hp("30%")}
+              chartConfig={{
+                color: () => "#000",
+                labelColor: () => "#333",
+              }}
+              accessor={"population"}
+              backgroundColor={"transparent"}
+              paddingLeft={"0"}
+              center={[30, 0]} // cleanly shift right by 30 units
+              absolute
+              hasLegend={true}
+            />
+          </View>
         </View>
       </Screen>
     </ImageBackground>
@@ -67,6 +112,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingHorizontal: wp("8%"),
     fontFamily: "Montserrat_400Regular",
+  },
+  chartContainer: {
+    marginTop: hp("4%"),
+    width: "100%",
+    alignItems: "center", // center the entire chart
+    paddingLeft: wp("10%"),
   },
 });
 

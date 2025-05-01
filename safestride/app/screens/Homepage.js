@@ -8,6 +8,7 @@ import {
 import AppText from "../components/AppText";
 import Screen from "../components/Screen";
 import colors from "../config/colors";
+import AppButton from "../components/AppButton";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -67,6 +68,19 @@ function Homepage() {
               hasLegend={true}
             />
           </View>
+          <View style={styles.buttonGroup}>
+            <AppButton
+              title="Start Session"
+              onPress={() => console.log("Start pressed")}
+              style={styles.buttonPrimary}
+            />
+            <AppButton
+              title="Retake Test"
+              onPress={() => console.log("Progress pressed")}
+              style={styles.buttonOutline}
+              textStyle={{ color: colors.primary }}
+            />
+          </View>
         </View>
       </Screen>
     </ImageBackground>
@@ -97,7 +111,7 @@ const styles = StyleSheet.create({
   centerContent: {
     alignItems: "center",
     paddingHorizontal: wp("5%"),
-    transform: [{ translateY: hp("5%") }],
+    transform: [{ translateY: hp("8%") }], 
   },
   text: {
     color: colors.darkGrey,
@@ -118,6 +132,24 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center", // center the entire chart
     paddingLeft: wp("10%"),
+  },
+  buttonGroup: {
+    marginTop: hp("4%"),
+    width: wp("70%"),
+    alignSelf: "center",
+  },
+
+  buttonPrimary: {
+    backgroundColor: colors.secondary,
+    marginBottom: hp("2%"),
+    height: hp("7%"),
+  },
+
+  buttonOutline: {
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: "#000",
+    height: hp("7%"),
   },
 });
 

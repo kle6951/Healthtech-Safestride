@@ -36,7 +36,7 @@ function Entrypage({ navigation }) {
         />
         <AppButton
           title="YES"
-          onPress={() => console.log("YES pressed")}
+          onPress={() => navigation.navigate("Prompt")}
           style={styles.button}
         />
       </View>

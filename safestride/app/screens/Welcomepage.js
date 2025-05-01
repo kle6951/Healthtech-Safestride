@@ -9,6 +9,10 @@ import Screen from "../components/Screen";
 import AppText from "../components/AppText";
 import colors from "../config/colors";
 import LottieView from "lottie-react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 function Welcomepage({ navigation }) {
   return (
@@ -20,12 +24,18 @@ function Welcomepage({ navigation }) {
       {/* App name at the top center */}
       <AppText style={styles.name}>SmartStride</AppText>
 
-      {/* Central content */}
+      {/* Main overlay */}
       <Screen style={styles.overlay}>
+        {/* Centered text content */}
         <View style={styles.centerContent}>
-          <AppText style={styles.text}>
+          <AppText style={styles.text}>Are You Ready?</AppText>
+          <AppText style={styles.subtitle}>
             Striving to improve cognitive health in the community
           </AppText>
+        </View>
+
+        {/* Button moved further down */}
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={() => navigation.navigate("Entry")}
             activeOpacity={0.7}
@@ -51,32 +61,45 @@ const styles = StyleSheet.create({
   },
   name: {
     position: "absolute",
-    top: 75,
+    top: hp("9%"),
     alignSelf: "center",
     color: colors.primary,
     fontWeight: "bold",
-    fontSize: 25,
+    fontSize: wp("6.5%"),
   },
   overlay: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
+    paddingTop: hp("5%"),
+    paddingBottom: hp("10%"),
   },
   centerContent: {
     alignItems: "center",
-    transform: [{ translateY: -85 }], 
+    paddingHorizontal: wp("5%"),
+    transform: [{ translateY: hp("5%") }],
   },
   text: {
-    color: colors.primary,
-    fontSize: 35,
-    fontWeight: "bold",
+    color: colors.darkGrey,
+    fontSize: wp("8%"),
     textAlign: "center",
-    marginBottom: -40,
+    fontFamily: "Montserrat_700Bold",
+  },
+  subtitle: {
+    marginTop: hp("1%"),
+    fontSize: wp("5%"),
+    color: colors.darkGrey,
+    textAlign: "center",
+    paddingHorizontal: wp("8%"),
+    fontFamily: "Montserrat_400Regular",
+  },
+  buttonContainer: {
+    alignItems: "center",
+    marginBottom: -hp("18%"),
   },
   animation: {
-    width: 350,
-    height: 300,
-    marginTop: -20,
+    width: wp("90%"),
+    height: hp("35%"),
   },
 });
 

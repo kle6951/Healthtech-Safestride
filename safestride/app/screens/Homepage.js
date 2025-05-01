@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   centerContent: {
     alignItems: "center",
     paddingHorizontal: wp("5%"),
-    transform: [{ translateY: hp("8%") }], 
+    transform: [{ translateY: hp("8%") }],
   },
   text: {
     color: colors.darkGrey,
@@ -134,8 +134,8 @@ const styles = StyleSheet.create({
     paddingLeft: wp("10%"),
   },
   buttonGroup: {
-    marginTop: hp("4%"),
-    width: wp("70%"),
+    marginTop: hp("7%"), // increase the space above the buttons
+    width: wp("80%"),
     alignSelf: "center",
   },
 

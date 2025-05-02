@@ -7,11 +7,16 @@ import {
   Pressable,
   Alert,
   Animated,
+  Platform,
 } from "react-native";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import colors from "../config/colors";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 const questions = [
   {
@@ -159,7 +164,7 @@ function Quizpage({ navigation }) {
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <AntDesign name="left" size={40} color={colors.primary} />
+          <AntDesign name="left" size={wp("8%")} color={colors.primary} />
         </TouchableOpacity>
 
         <View style={styles.centeredTitle}>
@@ -190,7 +195,7 @@ function Quizpage({ navigation }) {
       <AppText style={styles.question}>{currentQuestion.question}</AppText>
 
       {/* Choices */}
-      {currentQuestion.choices.map((choiceText, index) => {
+      {currentQuestion.choices.map((choiceText) => {
         const choiceId = choiceText[0]; // "A", "B", etc.
         const isSelected = selectedChoice === choiceId;
         return (
@@ -245,29 +250,29 @@ function Quizpage({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 10,
-    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "android" ? hp("6%") : hp("2%"),
+    paddingHorizontal: wp("5%"),
   },
   goBackText: {
-    fontSize: 20,
+    fontSize: wp("5%"),
     fontWeight: "bold",
     color: colors.secondary,
     textAlign: "center",
-    marginTop: 20,
+    marginTop: hp("2%"),
     textDecorationLine: "underline",
   },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
-    paddingHorizontal: 10,
+    marginTop: hp("2%"),
+    paddingHorizontal: wp("2%"),
   },
   topRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     position: "relative",
-    marginBottom: 20,
+    marginBottom: hp("2.5%"),
   },
   centeredTitle: {
     position: "absolute",
@@ -277,46 +282,46 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   text: {
-    fontSize: 25,
+    fontSize: wp("5.5%"),
     color: colors.secondary,
     fontWeight: "bold",
   },
   title: {
-    fontSize: 25,
+    fontSize: wp("6%"),
     fontWeight: "bold",
     color: colors.primary,
     textAlign: "center",
   },
   progressContainer: {
-    height: 20,
+    height: hp("2.5%"),
     width: "100%",
     backgroundColor: "#e0e0e0",
-    borderRadius: 10,
+    borderRadius: wp("3%"),
     overflow: "hidden",
-    marginBottom: 30,
+    marginBottom: hp("3%"),
   },
   progressBar: {
     height: "100%",
     backgroundColor: colors.primary,
   },
   question: {
-    fontSize: 30,
+    fontSize: wp("6.5%"),
     fontWeight: "600",
-    marginBottom: 30,
+    marginBottom: hp("3%"),
   },
   choiceBox: {
     backgroundColor: "#f8f8f8",
-    paddingVertical: 25,
-    paddingHorizontal: 20,
-    borderRadius: 15,
-    marginBottom: 20,
+    paddingVertical: hp("3%"),
+    paddingHorizontal: wp("4%"),
+    borderRadius: wp("4%"),
+    marginBottom: hp("2%"),
     borderWidth: 1,
     borderColor: "#ddd",
     justifyContent: "center",
-    minHeight: 80,
+    minHeight: hp("10%"),
   },
   choiceText: {
-    fontSize: 25,
+    fontSize: wp("5.5%"),
     color: "#333",
   },
 });

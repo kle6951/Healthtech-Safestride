@@ -17,17 +17,18 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    // <NavigationContainer>
-    //   <Stack.Navigator
-    //     initialRouteName="Welcome"
-    //     screenOptions={{ headerShown: false }}
-    //   >
-    //     <Stack.Screen name="Welcome" component={Welcomepage} />
-    //     <Stack.Screen name="Prompt" component={Promptpage} />
-    //     <Stack.Screen name="Entry" component={Entrypage} />
-    //     <Stack.Screen name="Quiz" component={Quizpage} />
-    //   </Stack.Navigator>
-    // </NavigationContainer>
-    <Homepage></Homepage>
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="Welcome"
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="Welcome" component={Welcomepage} />
+        <Stack.Screen name="Prompt" component={Promptpage} />
+        <Stack.Screen name="Entry" component={Entrypage} />
+        <Stack.Screen name="Quiz" component={Quizpage} />
+      </Stack.Navigator>
+    </NavigationContainer>
+    // <Homepage></Homepage>
+    // <Promptpage></Promptpage>
   );
 }

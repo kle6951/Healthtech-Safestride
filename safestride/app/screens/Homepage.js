@@ -73,12 +73,13 @@ function Homepage() {
               title="Start Session"
               onPress={() => console.log("Start pressed")}
               style={styles.buttonPrimary}
+              textStyle={{ fontSize: wp("6%") }}
             />
             <AppButton
               title="Retake Test"
               onPress={() => console.log("Progress pressed")}
               style={styles.buttonOutline}
-              textStyle={{ color: colors.primary }}
+              textStyle={{ color: colors.primary, fontSize: wp("6%") }}
             />
           </View>
         </View>
@@ -115,9 +116,10 @@ const styles = StyleSheet.create({
   },
   text: {
     color: colors.darkGrey,
-    fontSize: wp("8%"),
+    fontSize: wp("11%"),
     textAlign: "center",
     fontFamily: "Montserrat_700Bold",
+    fontWeight: "bold",
   },
   subtitle: {
     marginTop: hp("1%"),

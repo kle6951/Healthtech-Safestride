@@ -1,14 +1,9 @@
 import React from "react";
-import {
-  StyleSheet,
-  ImageBackground,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, ImageBackground, View } from "react-native";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
+import AppButton from "../components/AppButton"; // Imported AppButton
 import colors from "../config/colors";
-import LottieView from "lottie-react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
@@ -21,12 +16,10 @@ function Welcomepage({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
-      {/* App name at the top center */}
       <AppText style={styles.name}>SmartStride</AppText>
 
-      {/* Main overlay */}
       <Screen style={styles.overlay}>
-        {/* Centered text content */}
+        {/* Centered Text Content */}
         <View style={styles.centerContent}>
           <AppText style={styles.text}>Are You Ready?</AppText>
           <AppText style={styles.subtitle}>
@@ -34,19 +27,13 @@ function Welcomepage({ navigation }) {
           </AppText>
         </View>
 
-        {/* Button moved further down */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
+          <AppButton
+            title="Get Started"
             onPress={() => navigation.navigate("Entry")}
-            activeOpacity={0.7}
-          >
-            <LottieView
-              style={styles.animation}
-              autoPlay
-              loop
-              source={require("../../assets/animation/start.json")}
-            />
-          </TouchableOpacity>
+            style={styles.button}
+            textStyle={{ fontSize: wp("5%") }}
+          />
         </View>
       </Screen>
     </ImageBackground>
@@ -72,7 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingTop: hp("5%"),
-    paddingBottom: hp("10%"),
+    paddingBottom: hp("5%"),
   },
   centerContent: {
     alignItems: "center",
@@ -94,12 +81,12 @@ const styles = StyleSheet.create({
     fontFamily: "Montserrat_400Regular",
   },
   buttonContainer: {
+    width: wp("80%"),
     alignItems: "center",
-    marginBottom: -hp("18%"),
   },
-  animation: {
-    width: wp("90%"),
-    height: hp("35%"),
+  button: {
+    backgroundColor: colors.primary,
+    height: hp("7%"),
   },
 });
 

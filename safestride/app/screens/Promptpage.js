@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
+import * as Speech from "expo-speech"; 
 import Screen from "../components/Screen";
 import colors from "../config/colors";
 import AppText from "../components/AppText";
@@ -87,9 +88,17 @@ function Promptpage() {
       useNativeDriver: true,
     }).start(() => {
       const nextIndex = (index + 1) % prompts.length;
+      const nextPrompt = prompts[nextIndex];
+
+      Speech.stop(); // ✅ Stop any ongoing speech
       setIndex(nextIndex);
-      setCurrentPrompt(prompts[nextIndex]);
+      setCurrentPrompt(nextPrompt);
       slideAnim.setValue(width);
+
+      Speech.speak(nextPrompt.message, {
+        language: "en",
+        rate: 0.9,
+      });
 
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -135,7 +144,6 @@ function Promptpage() {
             />
           </View>
 
-          {/* Green Circle Button */}
           <TouchableOpacity style={styles.greenCircle} onPress={toggleTimer}>
             <AntDesign
               name={isRunning ? "stepforward" : "pause"}

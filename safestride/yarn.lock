@@ -2616,6 +2616,11 @@ expo-modules-core@2.3.12:
   dependencies:
     invariant "^2.2.4"
 
+expo-speech@~13.1.6:
+  version "13.1.6"
+  resolved "https://registry.yarnpkg.com/expo-speech/-/expo-speech-13.1.6.tgz#7fd5fe1d71192fcd3879df9834ac42f0a0be7136"
+  integrity sha512-6iaFde1ct6EyzaGhrR1fWMjGHLxo2xLHcmVDCg4tl7RlPieiLrphW5mHQgFjJUWyyc1pguBwb8tHDJaciB2M2Q==
+
 expo-splash-screen@~0.17.0:
   version "0.17.5"
   resolved "https://registry.npmjs.org/expo-splash-screen/-/expo-splash-screen-0.17.5.tgz"

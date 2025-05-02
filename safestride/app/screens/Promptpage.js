@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
-import * as Speech from "expo-speech"; 
+import * as Speech from "expo-speech";
 import Screen from "../components/Screen";
 import colors from "../config/colors";
 import AppText from "../components/AppText";
@@ -90,7 +90,7 @@ function Promptpage() {
       const nextIndex = (index + 1) % prompts.length;
       const nextPrompt = prompts[nextIndex];
 
-      Speech.stop(); // ✅ Stop any ongoing speech
+      Speech.stop();
       setIndex(nextIndex);
       setCurrentPrompt(nextPrompt);
       slideAnim.setValue(width);
@@ -138,7 +138,7 @@ function Promptpage() {
               textStyle={{ color: colors.primary }}
             />
             <AppButton
-              title="NEXT"
+              title="COMPLETE"
               onPress={handleNextPrompt}
               style={styles.buttonRight}
             />

@@ -1,13 +1,21 @@
-import React, { useState, useRef } from "react";
-import { StyleSheet, View, Animated, Easing, Dimensions } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  Animated,
+  Easing,
+  Dimensions,
+  ImageBackground,
+  TouchableOpacity,
+} from "react-native";
+import { AntDesign } from "@expo/vector-icons";
 import Screen from "../components/Screen";
 import colors from "../config/colors";
 import AppText from "../components/AppText";
 import AppButton from "../components/AppButton";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
-// temporary data
 const prompts = [
   { type: "recall", message: "Name three cities you've visited before." },
   { type: "recall", message: "List five things you ate in the past 24 hours." },
@@ -47,25 +55,44 @@ const prompts = [
 function Promptpage() {
   const [index, setIndex] = useState(0);
   const [currentPrompt, setCurrentPrompt] = useState(prompts[0]);
+  const [secondsElapsed, setSecondsElapsed] = useState(0);
+  const [isRunning, setIsRunning] = useState(true);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    if (!isRunning) return;
+
+    const interval = setInterval(() => {
+      setSecondsElapsed((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isRunning]);
+
+  const toggleTimer = () => {
+    setIsRunning((prev) => !prev);
+  };
+
+  const formatTime = (totalSeconds) => {
+    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+    const seconds = String(totalSeconds % 60).padStart(2, "0");
+    return `00:${minutes}:${seconds}`;
+  };
+
   const handleNextPrompt = () => {
-    // Slide out current
     Animated.timing(slideAnim, {
-      toValue: -width, // move current out to the left
+      toValue: -width,
       duration: 300,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start(() => {
-      // Update prompt + reset position to right
       const nextIndex = (index + 1) % prompts.length;
       setIndex(nextIndex);
       setCurrentPrompt(prompts[nextIndex]);
-      slideAnim.setValue(width); // position new prompt offscreen right
+      slideAnim.setValue(width);
 
-      // Slide in new
       Animated.timing(slideAnim, {
-        toValue: 0, // move into center
+        toValue: 0,
         duration: 300,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
@@ -74,70 +101,125 @@ function Promptpage() {
   };
 
   return (
-    <Screen style={styles.container}>
-      <View style={styles.promptBox}>
-        <Animated.View
-          style={[
-            styles.animatedWrapper,
-            { transform: [{ translateX: slideAnim }] },
-          ]}
-        >
-          <AppText style={styles.text}>{currentPrompt.message}</AppText>
-        </Animated.View>
-      </View>
-      <View style={styles.buttonRow}>
-        <AppButton
-          title="Skip"
-          onPress={handleNextPrompt}
-          style={styles.button}
-        />
-        <AppButton
-          title="Complete"
-          onPress={handleNextPrompt}
-          style={styles.button}
-        />
-      </View>
-    </Screen>
+    <ImageBackground
+      source={require("../../assets/Prompt.png")}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <Screen style={styles.container}>
+        <View style={styles.contentWrapper}>
+          <AppText style={styles.timer}>{formatTime(secondsElapsed)}</AppText>
+
+          <View style={styles.promptBox}>
+            <Animated.View
+              style={[
+                styles.animatedWrapper,
+                { transform: [{ translateX: slideAnim }] },
+              ]}
+            >
+              <AppText style={styles.text}>{currentPrompt.message}</AppText>
+            </Animated.View>
+          </View>
+
+          <View style={styles.buttonRow}>
+            <AppButton
+              title="SKIP"
+              onPress={handleNextPrompt}
+              style={styles.buttonLeft}
+              textStyle={{ color: colors.primary }}
+            />
+            <AppButton
+              title="NEXT"
+              onPress={handleNextPrompt}
+              style={styles.buttonRight}
+            />
+          </View>
+
+          {/* Green Circle Button */}
+          <TouchableOpacity style={styles.greenCircle} onPress={toggleTimer}>
+            <AntDesign
+              name={isRunning ? "stepforward" : "pause"}
+              size={60}
+              color={colors.white}
+            />
+          </TouchableOpacity>
+        </View>
+      </Screen>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
   container: {
-    backgroundColor: colors.screenWhite,
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  contentWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
   promptBox: {
-    backgroundColor: colors.primary,
-    borderRadius: 25,
-    width: 375,
-    height: 400,
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: "#000",
+    width: width * 0.9,
+    height: height * 0.3,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: height * 0.05,
     overflow: "hidden",
   },
   animatedWrapper: {
-    width: 375,
+    width: width * 0.9,
     position: "absolute",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: width * 0.05,
   },
   text: {
-    color: colors.white,
+    color: colors.darkGrey,
     textAlign: "center",
-    fontSize: 35,
+    fontSize: width * 0.06,
+    fontWeight: "bold",
+  },
+  timer: {
+    fontSize: width * 0.1,
+    fontWeight: "bold",
+    color: colors.darkGrey,
+    marginBottom: 10,
   },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "80%",
-    gap: 15,
+    width: width * 0.9,
   },
-  button: {
+  buttonLeft: {
     flex: 1,
+    marginRight: 10,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: "#000",
+  },
+  buttonRight: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  greenCircle: {
+    width: width * 0.3,
+    height: width * 0.3,
+    borderRadius: (width * 0.3) / 2,
+    backgroundColor: "#21b524",
+    marginTop: 50,
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

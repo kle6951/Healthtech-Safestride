@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Modal,
   Alert,
+  Image,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
@@ -19,6 +20,10 @@ import AppButton from "../components/AppButton";
 import * as Progress from "react-native-progress";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import allPrompts from "../data/Prompts";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 const { width, height } = Dimensions.get("window");
 
@@ -294,7 +299,20 @@ function Promptpage({ navigation }) {
                   : "Keep practicing to improve your brain-body sync!"}
               </AppText>
 
-              <AppButton title="Finish" onPress={() => navigation.goBack()} />
+              <Image
+                source={require("../../assets/Result.png")}
+                style={{
+                  width: wp("70%"),
+                  height: hp("45%"),
+                  marginTop: 20,
+                  resizeMode: "contain",
+                  alignSelf: "center",
+                }}
+              />
+
+              <View style={{ marginTop: 25, width: "100%" }}>
+                <AppButton title="Finish" onPress={() => navigation.goBack()} />
+              </View>
             </View>
           </View>
         </Modal>

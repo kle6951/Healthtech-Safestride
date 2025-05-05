@@ -1,4 +1,3 @@
-// Promptpage.js
 import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
@@ -53,7 +52,7 @@ function getFilteredPrompts(categoryScores) {
     }
   });
 
-  return result.filter(Boolean); // remove undefined in case some are missing
+  return result.filter(Boolean); // remove undefined
 }
 
 function Promptpage({ navigation }) {
@@ -65,6 +64,7 @@ function Promptpage({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
+  const [skippedCount, setSkippedCount] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -95,14 +95,25 @@ function Promptpage({ navigation }) {
     return `00:${m}:${sec}`;
   };
 
-  const handleNextPrompt = () => {
+  const handleNextPrompt = (skipped = false) => {
+    if (skipped) setSkippedCount((prev) => prev + 1);
+
+    const nextIndex = index + 1;
+
+    if (nextIndex >= prompts.length) {
+      setIsRunning(false);
+      Speech.stop();
+      setModalVisible(false);
+      setCurrentPrompt(null);
+      return;
+    }
+
     Animated.timing(slideAnim, {
       toValue: -width,
       duration: 300,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start(() => {
-      const nextIndex = (index + 1) % prompts.length;
       const nextPrompt = prompts[nextIndex];
       Speech.stop();
       setIndex(nextIndex);
@@ -123,18 +134,49 @@ function Promptpage({ navigation }) {
 
   const checkAnswer = () => {
     if (!currentPrompt) return;
+
     if (selectedAnswer === currentPrompt.answer) {
       setScore((prev) => prev + 1);
-      const msg = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+      const msg =
+        motivationalMessages[
+          Math.floor(Math.random() * motivationalMessages.length)
+        ];
       Alert.alert("Good job!", msg);
     } else {
       Alert.alert("Try again", "That’s not the correct answer.");
     }
+
     setModalVisible(false);
+
+    if (index >= prompts.length - 1) {
+      setIsRunning(false);
+      setCurrentPrompt(null);
+    }
+
     handleNextPrompt();
   };
 
-  if (!currentPrompt) return null;
+  // Save session summary to AsyncStorage
+  useEffect(() => {
+    const saveResults = async () => {
+      const sessionSummary = {
+        date: new Date().toISOString(),
+        score,
+        skippedCount,
+        duration: secondsElapsed,
+      };
+      const prev = await AsyncStorage.getItem("sessionHistory");
+      const parsed = prev ? JSON.parse(prev) : [];
+      await AsyncStorage.setItem(
+        "sessionHistory",
+        JSON.stringify([sessionSummary, ...parsed])
+      );
+    };
+
+    if (currentPrompt === null && prompts.length > 0) {
+      saveResults();
+    }
+  }, [currentPrompt]);
 
   return (
     <ImageBackground
@@ -168,30 +210,34 @@ function Promptpage({ navigation }) {
 
           <AppText style={styles.score}>Score: {score}</AppText>
 
-          <View style={styles.promptBox}>
-            <Animated.View
-              style={[
-                styles.animatedWrapper,
-                { transform: [{ translateX: slideAnim }] },
-              ]}
-            >
-              <AppText style={styles.text}>{currentPrompt.message}</AppText>
-            </Animated.View>
-          </View>
+          {currentPrompt && (
+            <View style={styles.promptBox}>
+              <Animated.View
+                style={[
+                  styles.animatedWrapper,
+                  { transform: [{ translateX: slideAnim }] },
+                ]}
+              >
+                <AppText style={styles.text}>{currentPrompt.message}</AppText>
+              </Animated.View>
+            </View>
+          )}
 
-          <View style={styles.buttonRow}>
-            <AppButton
-              title="SKIP"
-              onPress={handleNextPrompt}
-              style={styles.buttonLeft}
-              textStyle={{ color: colors.primary }}
-            />
-            <AppButton
-              title="COMPLETE"
-              onPress={handleComplete}
-              style={styles.buttonRight}
-            />
-          </View>
+          {currentPrompt && (
+            <View style={styles.buttonRow}>
+              <AppButton
+                title="SKIP"
+                onPress={() => handleNextPrompt(true)}
+                style={styles.buttonLeft}
+                textStyle={{ color: colors.primary }}
+              />
+              <AppButton
+                title="COMPLETE"
+                onPress={handleComplete}
+                style={styles.buttonRight}
+              />
+            </View>
+          )}
 
           <TouchableOpacity style={styles.greenCircle} onPress={toggleTimer}>
             <AntDesign
@@ -202,12 +248,14 @@ function Promptpage({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Modal */}
+        {/* Answer Modal */}
         <Modal visible={modalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
-              <AppText style={styles.modalQuestion}>{currentPrompt.message}</AppText>
-              {currentPrompt.options.map((option, idx) => (
+              <AppText style={styles.modalQuestion}>
+                {currentPrompt?.message}
+              </AppText>
+              {currentPrompt?.options.map((option, idx) => (
                 <TouchableOpacity
                   key={idx}
                   style={[
@@ -223,11 +271,37 @@ function Promptpage({ navigation }) {
             </View>
           </View>
         </Modal>
+
+        {/* Final Summary Modal */}
+        <Modal
+          visible={currentPrompt === null && prompts.length > 0}
+          animationType="slide"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <AppText style={styles.modalQuestion}>Session Summary</AppText>
+              <AppText>
+                🧠 Accuracy: {score} / {prompts.length}
+              </AppText>
+              <AppText>⏱ Duration: {formatTime(secondsElapsed)}</AppText>
+              <AppText>⏭ Skipped: {skippedCount}</AppText>
+
+              <AppText style={{ marginTop: 15, textAlign: "center" }}>
+                {score / prompts.length >= 0.7
+                  ? "Great job staying focused and coordinated!"
+                  : skippedCount > prompts.length / 2
+                  ? "You skipped quite a few. Maybe take a break and try again later."
+                  : "Keep practicing to improve your brain-body sync!"}
+              </AppText>
+
+              <AppButton title="Finish" onPress={() => navigation.goBack()} />
+            </View>
+          </View>
+        </Modal>
       </Screen>
     </ImageBackground>
   );
 }
-
 const styles = StyleSheet.create({
   background: {
     flex: 1,

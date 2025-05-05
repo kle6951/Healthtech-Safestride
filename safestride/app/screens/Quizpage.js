@@ -17,39 +17,8 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-
-const questions = [
-  {
-    id: 1,
-    question: "What is the capital of France?",
-    choices: ["A. Berlin", "B. Madrid", "C. Paris", "D. Beijing"],
-    answer: "C",
-  },
-  {
-    id: 2,
-    question: "Which planet is closest to the Sun?",
-    choices: ["A. Venus", "B. Mercury", "C. Mars", "D. Earth"],
-    answer: "B",
-  },
-  {
-    id: 3,
-    question: "What gas do plants absorb?",
-    choices: ["A. Oxygen", "B. Carbon Dioxide", "C. Nitrogen", "D. Hydrogen"],
-    answer: "B",
-  },
-  {
-    id: 4,
-    question: "Who wrote Hamlet?",
-    choices: ["A. Dickens", "B. Tolstoy", "C. Shakespeare", "D. Twain"],
-    answer: "C",
-  },
-  {
-    id: 5,
-    question: "How many continents are there?",
-    choices: ["A. 5", "B. 6", "C. 7", "D. 8"],
-    answer: "C",
-  },
-];
+import questions from "../data/Questions";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function Quizpage({ navigation }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -77,6 +46,28 @@ function Quizpage({ navigation }) {
     setAnswers({ ...answers, [currentQuestionIndex]: choiceId });
   };
 
+  const submitQuiz = async () => {
+    const categoryScores = {};
+
+    questions.forEach((q, index) => {
+      const userAnswer = answers[index];
+      const isCorrect = userAnswer === q.answer;
+      if (!categoryScores[q.type]) {
+        categoryScores[q.type] = { correct: 0, total: 0 };
+      }
+      categoryScores[q.type].total += 1;
+      if (isCorrect) categoryScores[q.type].correct += 1;
+    });
+
+    try {
+      await AsyncStorage.setItem("quizResults", JSON.stringify(categoryScores));
+    } catch (e) {
+      console.error("Failed to save results", e);
+    }
+    Alert.alert("Quiz Submitted", "Redirecting to homepage with your results.");
+    navigation.navigate("Home", { categoryScores });
+  };
+
   const handleNext = () => {
     if (selectedChoice === null) {
       Alert.alert(
@@ -92,20 +83,7 @@ function Quizpage({ navigation }) {
     } else {
       Alert.alert("Submit Quiz?", "Are you ready to submit your answers?", [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Submit",
-          style: "default",
-          onPress: () => {
-            const score = questions.reduce((acc, q, i) => {
-              return answers[i] === q.answer ? acc + 1 : acc;
-            }, 0);
-            Alert.alert(
-              "Quiz Submitted",
-              `You scored ${score} / ${questions.length}`
-            );
-            navigation.navigate("Entry");
-          },
-        },
+        { text: "Submit", style: "default", onPress: submitQuiz },
       ]);
     }
   };
@@ -124,20 +102,7 @@ function Quizpage({ navigation }) {
     } else {
       Alert.alert("Submit Quiz?", "Are you ready to submit your answers?", [
         { text: "Cancel", style: "cancel" },
-        {
-          text: "Submit",
-          style: "default",
-          onPress: () => {
-            const score = questions.reduce((acc, q, i) => {
-              return answers[i] === q.answer ? acc + 1 : acc;
-            }, 0);
-            Alert.alert(
-              "Quiz Submitted",
-              `You scored ${score} / ${questions.length}`
-            );
-            navigation.navigate("Entry");
-          },
-        },
+        { text: "Submit", style: "default", onPress: submitQuiz },
       ]);
     }
   };
@@ -161,8 +126,6 @@ function Quizpage({ navigation }) {
               ]
             )
           }
-          activeOpacity={0.7}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <AntDesign name="left" size={wp("8%")} color={colors.primary} />
         </TouchableOpacity>
@@ -196,7 +159,7 @@ function Quizpage({ navigation }) {
 
       {/* Choices */}
       {currentQuestion.choices.map((choiceText) => {
-        const choiceId = choiceText[0]; // "A", "B", etc.
+        const choiceId = choiceText[0];
         const isSelected = selectedChoice === choiceId;
         return (
           <Pressable

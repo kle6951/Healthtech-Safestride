@@ -21,6 +21,13 @@ function Entrypage({ navigation }) {
       style={styles.background}
       resizeMode="cover"
     >
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("Welcome")}
+      >
+        <AppText style={styles.backText}>Go back</AppText>
+      </TouchableOpacity>
+
       <Screen style={styles.overlay}>
         <View style={styles.centerContent}>
           <AppText style={styles.text}>Let's do a test!</AppText>
@@ -51,6 +58,18 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     height: "100%",
+  },
+  backButton: {
+    position: "absolute",
+    top: hp("8%"),
+    left: wp("5%"),
+    zIndex: 10,
+  },
+  backText: {
+    color: colors.primary,
+    fontSize: wp("5.5%"),
+    fontFamily: "Montserrat_400Regular",
+    textDecorationLine: "underline",
   },
   buttonContainer: {
     width: wp("80%"),

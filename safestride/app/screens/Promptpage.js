@@ -13,40 +13,14 @@ import {
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Progress from "react-native-progress";
 import Screen from "../components/Screen";
 import colors from "../config/colors";
 import AppText from "../components/AppText";
 import AppButton from "../components/AppButton";
-import * as Progress from 'react-native-progress';
 
 const { width, height } = Dimensions.get("window");
-
-const prompts = [
-  {
-    type: "easy",
-    message: "What comes after 5?",
-    options: ["A) 6", "B) 4", "C) 3"],
-    answer: "A",
-  },
-  {
-    type: "easy",
-    message: "Which of these is a fruit?",
-    options: ["A) Carrot", "B) Apple", "C) Broccoli"],
-    answer: "B",
-  },
-  {
-    type: "medium",
-    message: "What is the opposite of 'Cold'?",
-    options: ["A) Wet", "B) Hot", "C) Wind"],
-    answer: "B",
-  },
-  {
-    type: "hard",
-    message: "What comes next: A-1, B-2, ___?",
-    options: ["A) C-3", "B) D-4", "C) B-3"],
-    answer: "A",
-  },
-];
 
 const motivationalMessages = [
   "Nice work! You’re keeping your brain and body in sync.",
@@ -56,8 +30,9 @@ const motivationalMessages = [
 ];
 
 function Promptpage() {
+  const [prompts, setPrompts] = useState([]);
   const [index, setIndex] = useState(0);
-  const [currentPrompt, setCurrentPrompt] = useState(prompts[0]);
+  const [currentPrompt, setCurrentPrompt] = useState(null);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -65,19 +40,55 @@ function Promptpage() {
   const [score, setScore] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
+  const generatePromptSet = (categoryScores) => {
+    const allPrompts = require("../data/Prompt").default; // make sure default export
+    const totalCorrect = Object.values(categoryScores).reduce(
+      (sum, cat) => sum + cat.correct,
+      0
+    );
+
+    let promptSet = [];
+
+    for (const [category, { correct }] of Object.entries(categoryScores)) {
+      const relevant = allPrompts.filter((p) => p.type === category);
+      const easy = relevant.filter((p) => p.difficulty === "easy");
+      const medium = relevant.filter((p) => p.difficulty === "medium");
+      const hard = relevant.filter((p) => p.difficulty === "hard");
+
+      if (totalCorrect >= 7) {
+        promptSet.push(...easy.slice(0, 1), ...medium.slice(0, 1));
+      } else if (totalCorrect >= 4) {
+        promptSet.push(...easy.slice(0, 1), ...medium.slice(0, 1));
+      } else {
+        promptSet.push(...easy.slice(0, 2));
+      }
+    }
+
+    return promptSet.slice(0, 6);
+  };
+
+  useEffect(() => {
+    const loadPrompts = async () => {
+      const saved = await AsyncStorage.getItem("quizResults");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const generated = generatePromptSet(parsed);
+        setPrompts(generated);
+        setCurrentPrompt(generated[0]);
+      }
+    };
+    loadPrompts();
+  }, []);
+
   useEffect(() => {
     if (!isRunning) return;
-
     const interval = setInterval(() => {
       setSecondsElapsed((prev) => prev + 1);
     }, 1000);
-
     return () => clearInterval(interval);
   }, [isRunning]);
 
-  const toggleTimer = () => {
-    setIsRunning((prev) => !prev);
-  };
+  const toggleTimer = () => setIsRunning((prev) => !prev);
 
   const formatTime = (totalSeconds) => {
     const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
@@ -101,10 +112,7 @@ function Promptpage() {
       setSelectedAnswer(null);
       slideAnim.setValue(width);
 
-      Speech.speak(nextPrompt.message, {
-        language: "en",
-        rate: 0.9,
-      });
+      Speech.speak(nextPrompt.message, { language: "en", rate: 0.9 });
 
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -115,25 +123,25 @@ function Promptpage() {
     });
   };
 
-  const handleComplete = () => {
-    setModalVisible(true);
-  };
+  const handleComplete = () => setModalVisible(true);
 
   const checkAnswer = () => {
     const correct = currentPrompt.answer;
     if (selectedAnswer === correct) {
       setScore((prev) => prev + 1);
-      const message =
+      const msg =
         motivationalMessages[
           Math.floor(Math.random() * motivationalMessages.length)
         ];
-      Alert.alert("Congratulations", message);
+      Alert.alert("Congratulations", msg);
     } else {
       Alert.alert("Oops!", "That’s not quite right. Try the next one!");
     }
     setModalVisible(false);
     handleNextPrompt();
   };
+
+  if (!currentPrompt) return null;
 
   return (
     <ImageBackground
@@ -144,14 +152,12 @@ function Promptpage() {
       <Screen style={styles.container}>
         <View style={styles.contentWrapper}>
           <AppText style={styles.timer}>{formatTime(secondsElapsed)}</AppText>
-
           <Progress.Bar
             progress={(index + 1) / prompts.length}
             width={width * 0.8}
             color="#21b524"
             style={{ marginBottom: 20 }}
           />
-
           <AppText style={styles.score}>Score: {score}</AppText>
 
           <View style={styles.promptBox}>
@@ -188,12 +194,7 @@ function Promptpage() {
           </TouchableOpacity>
         </View>
 
-        {/* Answer Modal */}
-        <Modal
-          visible={modalVisible}
-          animationType="slide"
-          transparent={true}
-        >
+        <Modal visible={modalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
               <AppText style={styles.modalQuestion}>
@@ -221,20 +222,9 @@ function Promptpage() {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    width: "100%",
-    height: "100%",
-  },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  contentWrapper: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  background: { flex: 1, width: "100%", height: "100%" },
+  container: { flex: 1, justifyContent: "center", alignItems: "center" },
+  contentWrapper: { alignItems: "center", justifyContent: "center" },
   promptBox: {
     backgroundColor: colors.white,
     borderRadius: 20,

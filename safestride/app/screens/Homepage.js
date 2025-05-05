@@ -61,7 +61,7 @@ function Homepage({ route, navigation }) {
 
       <Screen style={styles.overlay}>
         <View style={styles.centerContent}>
-          <AppText style={styles.text}>Welcome Back!</AppText>
+          <AppText style={styles.text}>Every step counts!</AppText>
           <AppText style={styles.subtitle}>Keep Going - Don't give up</AppText>
 
           <View style={styles.chartContainer}>
@@ -85,7 +85,7 @@ function Homepage({ route, navigation }) {
           <View style={styles.buttonGroup}>
             <AppButton
               title="Start Session"
-              onPress={() => console.log("Start pressed")}
+              onPress={() => navigation.navigate("Prompt")}
               style={styles.buttonPrimary}
               textStyle={{ fontSize: wp("6%") }}
             />
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: colors.darkGrey,
-    fontSize: wp("11%"),
+    fontSize: wp("10%"),
     textAlign: "center",
     fontFamily: "Montserrat_700Bold",
     fontWeight: "bold",

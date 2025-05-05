@@ -1,4 +1,4 @@
-// PromptpageWithAnswerModal.js
+// Promptpage.js
 import React, { useState, useRef, useEffect } from "react";
 import {
   StyleSheet,
@@ -18,35 +18,10 @@ import colors from "../config/colors";
 import AppText from "../components/AppText";
 import AppButton from "../components/AppButton";
 import * as Progress from "react-native-progress";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import allPrompts from "../data/Prompts";
 
 const { width, height } = Dimensions.get("window");
-
-const prompts = [
-  {
-    type: "easy",
-    message: "What comes after 5?",
-    options: ["A) 6", "B) 4", "C) 3"],
-    answer: "A",
-  },
-  {
-    type: "easy",
-    message: "Which of these is a fruit?",
-    options: ["A) Carrot", "B) Apple", "C) Broccoli"],
-    answer: "B",
-  },
-  {
-    type: "medium",
-    message: "What is the opposite of 'Cold'?",
-    options: ["A) Wet", "B) Hot", "C) Wind"],
-    answer: "B",
-  },
-  {
-    type: "hard",
-    message: "What comes next: A-1, B-2, ___?",
-    options: ["A) C-3", "B) D-4", "C) B-3"],
-    answer: "A",
-  },
-];
 
 const motivationalMessages = [
   "Nice work! You’re keeping your brain and body in sync.",
@@ -55,9 +30,36 @@ const motivationalMessages = [
   "Love how you’re staying active and alert.",
 ];
 
+function getFilteredPrompts(categoryScores) {
+  const totalCorrect = Object.values(categoryScores).reduce(
+    (sum, cat) => sum + cat.correct,
+    0
+  );
+
+  let difficultyRule = "low";
+  if (totalCorrect >= 7) difficultyRule = "high";
+  else if (totalCorrect >= 4) difficultyRule = "medium";
+
+  const result = [];
+  ["Recall", "Analysis", "Sensory"].forEach((type) => {
+    const byType = allPrompts.filter((p) => p.type === type);
+    if (difficultyRule === "high" || difficultyRule === "medium") {
+      result.push(
+        byType.find((p) => p.difficulty === "easy"),
+        byType.find((p) => p.difficulty === "medium")
+      );
+    } else {
+      result.push(...byType.filter((p) => p.difficulty === "easy").slice(0, 2));
+    }
+  });
+
+  return result.filter(Boolean); // remove undefined in case some are missing
+}
+
 function Promptpage({ navigation }) {
+  const [prompts, setPrompts] = useState([]);
   const [index, setIndex] = useState(0);
-  const [currentPrompt, setCurrentPrompt] = useState(prompts[0]);
+  const [currentPrompt, setCurrentPrompt] = useState(null);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -66,23 +68,31 @@ function Promptpage({ navigation }) {
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!isRunning) return;
+    const load = async () => {
+      const result = await AsyncStorage.getItem("quizResults");
+      if (!result) return;
+      const scores = JSON.parse(result);
+      const filtered = getFilteredPrompts(scores);
+      setPrompts(filtered);
+      setCurrentPrompt(filtered[0]);
+    };
+    load();
+  }, []);
 
+  useEffect(() => {
+    if (!isRunning) return;
     const interval = setInterval(() => {
       setSecondsElapsed((prev) => prev + 1);
     }, 1000);
-
     return () => clearInterval(interval);
   }, [isRunning]);
 
-  const toggleTimer = () => {
-    setIsRunning((prev) => !prev);
-  };
+  const toggleTimer = () => setIsRunning((prev) => !prev);
 
-  const formatTime = (totalSeconds) => {
-    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-    const seconds = String(totalSeconds % 60).padStart(2, "0");
-    return `00:${minutes}:${seconds}`;
+  const formatTime = (s) => {
+    const m = String(Math.floor(s / 60)).padStart(2, "0");
+    const sec = String(s % 60).padStart(2, "0");
+    return `00:${m}:${sec}`;
   };
 
   const handleNextPrompt = () => {
@@ -94,18 +104,12 @@ function Promptpage({ navigation }) {
     }).start(() => {
       const nextIndex = (index + 1) % prompts.length;
       const nextPrompt = prompts[nextIndex];
-
       Speech.stop();
       setIndex(nextIndex);
       setCurrentPrompt(nextPrompt);
       setSelectedAnswer(null);
       slideAnim.setValue(width);
-
-      Speech.speak(nextPrompt.message, {
-        language: "en",
-        rate: 0.9,
-      });
-
+      Speech.speak(nextPrompt.message, { language: "en", rate: 0.9 });
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 300,
@@ -115,25 +119,22 @@ function Promptpage({ navigation }) {
     });
   };
 
-  const handleComplete = () => {
-    setModalVisible(true);
-  };
+  const handleComplete = () => setModalVisible(true);
 
   const checkAnswer = () => {
-    const correct = currentPrompt.answer;
-    if (selectedAnswer === correct) {
+    if (!currentPrompt) return;
+    if (selectedAnswer === currentPrompt.answer) {
       setScore((prev) => prev + 1);
-      const message =
-        motivationalMessages[
-          Math.floor(Math.random() * motivationalMessages.length)
-        ];
-      Alert.alert("Congratulations", message);
+      const msg = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+      Alert.alert("Good job!", msg);
     } else {
-      Alert.alert("Oops!", "That’s not quite right. Try the next one!");
+      Alert.alert("Try again", "That’s not the correct answer.");
     }
     setModalVisible(false);
     handleNextPrompt();
   };
+
+  if (!currentPrompt) return null;
 
   return (
     <ImageBackground
@@ -142,7 +143,6 @@ function Promptpage({ navigation }) {
       resizeMode="cover"
     >
       <Screen style={styles.container}>
-        {/* Exit Icon */}
         <View style={styles.topBar}>
           <TouchableOpacity
             onPress={() =>
@@ -152,7 +152,7 @@ function Promptpage({ navigation }) {
               ])
             }
           >
-            <AntDesign name="closecircle" size={45} color={colors.primary} />
+            <AntDesign name="closecircle" size={40} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -202,14 +202,12 @@ function Promptpage({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Answer Modal */}
+        {/* Modal */}
         <Modal visible={modalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
-              <AppText style={styles.modalQuestion}>
-                {currentPrompt.message}
-              </AppText>
-              {currentPrompt.options?.map((option, idx) => (
+              <AppText style={styles.modalQuestion}>{currentPrompt.message}</AppText>
+              {currentPrompt.options.map((option, idx) => (
                 <TouchableOpacity
                   key={idx}
                   style={[
@@ -243,8 +241,8 @@ const styles = StyleSheet.create({
   },
   topBar: {
     position: "absolute",
-    top: height * 0.01,
-    left: width * 0.01,
+    top: height * 0.02,
+    left: width * 0.03,
     zIndex: 10,
   },
   contentWrapper: {

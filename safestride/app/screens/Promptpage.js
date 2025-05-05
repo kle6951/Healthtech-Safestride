@@ -45,19 +45,45 @@ function getFilteredPrompts(categoryScores) {
   else if (totalCorrect >= 4) difficultyRule = "medium";
 
   const result = [];
+
+  const getRandomFromArray = (arr, count) => {
+    const shuffled = [...arr].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
   ["Recall", "Analysis", "Sensory"].forEach((type) => {
     const byType = allPrompts.filter((p) => p.type === type);
-    if (difficultyRule === "high" || difficultyRule === "medium") {
-      result.push(
-        byType.find((p) => p.difficulty === "easy"),
-        byType.find((p) => p.difficulty === "medium")
+
+    if (difficultyRule === "high") {
+      const easy = getRandomFromArray(
+        byType.filter((p) => p.difficulty === "easy"),
+        1
       );
+      const medium = getRandomFromArray(
+        byType.filter((p) => p.difficulty === "medium"),
+        1
+      );
+      result.push(...easy, ...medium);
+    } else if (difficultyRule === "medium") {
+      const easy = getRandomFromArray(
+        byType.filter((p) => p.difficulty === "easy"),
+        1
+      );
+      const medium = getRandomFromArray(
+        byType.filter((p) => p.difficulty === "medium"),
+        1
+      );
+      result.push(...easy, ...medium);
     } else {
-      result.push(...byType.filter((p) => p.difficulty === "easy").slice(0, 2));
+      const easy = getRandomFromArray(
+        byType.filter((p) => p.difficulty === "easy"),
+        2
+      );
+      result.push(...easy);
     }
   });
 
-  return result.filter(Boolean); // remove undefined
+  return result.filter(Boolean);
 }
 
 function Promptpage({ navigation }) {

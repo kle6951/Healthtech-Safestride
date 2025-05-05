@@ -136,22 +136,25 @@ const styles = StyleSheet.create({
     paddingLeft: wp("10%"),
   },
   buttonGroup: {
-    marginTop: hp("7%"), // increase the space above the buttons
+    marginTop: hp("7%"),
     width: wp("80%"),
     alignSelf: "center",
   },
-
   buttonPrimary: {
     backgroundColor: colors.secondary,
     marginBottom: hp("2%"),
-    height: hp("7%"),
+    height: hp("8%"), 
+    justifyContent: "center", 
+    alignItems: "center",
   },
 
   buttonOutline: {
     backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: "#000",
-    height: hp("7%"),
+    height: hp("8%"), 
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

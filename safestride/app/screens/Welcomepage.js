@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, ImageBackground, View } from "react-native";
 import Screen from "../components/Screen";
 import AppText from "../components/AppText";
-import AppButton from "../components/AppButton"; // Imported AppButton
+import AppButton from "../components/AppButton";
 import colors from "../config/colors";
 import {
   widthPercentageToDP as wp,
@@ -83,10 +83,6 @@ const styles = StyleSheet.create({
   buttonContainer: {
     width: wp("80%"),
     alignItems: "center",
-  },
-  button: {
-    backgroundColor: colors.primary,
-    height: hp("7%"),
   },
 });
 

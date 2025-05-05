@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: hp("2%"),
     width: "100%",
-    height: hp("7%"),
+    // height: hp("7%"),
   },
   text: {
     color: colors.white,

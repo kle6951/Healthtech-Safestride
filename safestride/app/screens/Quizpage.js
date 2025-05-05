@@ -17,8 +17,8 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import questions from "../data/Questions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import questions from "../data/Questions";
 
 function Quizpage({ navigation }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -61,11 +61,11 @@ function Quizpage({ navigation }) {
 
     try {
       await AsyncStorage.setItem("quizResults", JSON.stringify(categoryScores));
+      navigation.navigate("Home", { categoryScores });
     } catch (e) {
-      console.error("Failed to save results", e);
+      console.error("Failed to save quiz results", e);
+      Alert.alert("Error", "Failed to save results.");
     }
-    Alert.alert("Quiz Submitted", "Redirecting to homepage with your results.");
-    navigation.navigate("Home", { categoryScores });
   };
 
   const handleNext = () => {

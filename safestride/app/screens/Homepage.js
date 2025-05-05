@@ -1,393 +1,189 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  StyleSheet,
   View,
-  Animated,
-  Easing,
   Dimensions,
   ImageBackground,
-  TouchableOpacity,
-  Modal,
+  StyleSheet,
   Alert,
-  ActivityIndicator,
 } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
-import * as Speech from "expo-speech";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Progress from "react-native-progress";
+import { PieChart } from "react-native-chart-kit";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+import AppText from "../components/AppText";
 import Screen from "../components/Screen";
 import colors from "../config/colors";
-import AppText from "../components/AppText";
 import AppButton from "../components/AppButton";
-import prompts from "../data/Prompt";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const { width, height } = Dimensions.get("window");
+const screenWidth = Dimensions.get("window").width;
 
-const motivationalMessages = [
-  "Nice work! You’re keeping your brain and body in sync.",
-  "Sharp thinking! Keep moving.",
-  "Even small steps like these make a big difference.",
-  "Love how you’re staying active and alert.",
-];
-
-function generatePromptSet(categoryScores) {
-  const totalCorrect = Object.values(categoryScores).reduce(
-    (sum, cat) => sum + cat.correct,
-    0
-  );
-
-  const typeMap = {
-    Sensory: "Multiple Stimulus Integration",
-    Recall: "Recall",
-    Analysis: "Analysis",
-  };
-
-  let promptSet = [];
-
-  for (const [category, { correct }] of Object.entries(categoryScores)) {
-    const mappedType = typeMap[category];
-    const relevant = prompts.filter((p) => {
-      console.log(`Checking prompt: ${p.type} === ${mappedType}`);
-      return p.type === mappedType;
-    });
-
-    if (!relevant.length) {
-      console.warn(`No prompts found for category: ${mappedType}`);
-      continue;
-    }
-
-    const easy = relevant.filter((p) => p.difficulty === "easy");
-    const medium = relevant.filter((p) => p.difficulty === "medium");
-    const hard = relevant.filter((p) => p.difficulty === "hard");
-
-    if (totalCorrect >= 7) {
-      promptSet.push(...easy.slice(0, 1), ...medium.slice(0, 1));
-    } else if (totalCorrect >= 4) {
-      promptSet.push(...easy.slice(0, 1), ...medium.slice(0, 1));
-    } else {
-      promptSet.push(...easy.slice(0, 2));
-    }
-  }
-
-  return promptSet.slice(0, 6); // Limit total number
-}
-
-function Promptpage({ route }) {
-  const [promptsList, setPromptsList] = useState([]);
-  const [currentPrompt, setCurrentPrompt] = useState(null);
-  const [index, setIndex] = useState(0);
-  const [secondsElapsed, setSecondsElapsed] = useState(0);
-  const [isRunning, setIsRunning] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [score, setScore] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const slideAnim = useRef(new Animated.Value(0)).current;
+function Homepage({ route, navigation }) {
+  const [categoryScores, setCategoryScores] = useState(null);
 
   useEffect(() => {
-    const loadPrompts = async () => {
-      try {
-        let scores = route?.params?.categoryScores;
-        console.log("Route scores:", scores);
-
-        if (!scores) {
-          const stored = await AsyncStorage.getItem("quizResults");
-          console.log("Loaded from storage:", stored);
-          if (stored) scores = JSON.parse(stored);
-        }
-
-        if (!scores) {
-          Alert.alert("No Quiz Data", "Please complete the quiz first.");
-          return;
-        }
-
-        const generated = generatePromptSet(scores);
-        console.log("Generated prompts:", generated);
-
-        if (generated.length === 0) {
-          Alert.alert(
-            "No Prompts Available",
-            "We couldn't generate prompts from your results."
-          );
-          return;
-        }
-
-        setPromptsList(generated);
-        setCurrentPrompt(generated[0]);
-      } catch (error) {
-        console.error("Error loading prompts:", error);
-      } finally {
-        setIsLoading(false);
+    const loadResults = async () => {
+      const fromParams = route?.params?.categoryScores;
+      if (fromParams) {
+        setCategoryScores(fromParams);
+        await AsyncStorage.setItem("quizResults", JSON.stringify(fromParams));
+      } else {
+        const saved = await AsyncStorage.getItem("quizResults");
+        if (saved) setCategoryScores(JSON.parse(saved));
       }
     };
-
-    loadPrompts();
+    loadResults();
   }, []);
 
-  useEffect(() => {
-    if (!isRunning) return;
-    const interval = setInterval(() => {
-      setSecondsElapsed((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isRunning]);
+  if (!categoryScores) return null;
 
-  const toggleTimer = () => setIsRunning((prev) => !prev);
-
-  const formatTime = (totalSeconds) => {
-    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-    const seconds = String(totalSeconds % 60).padStart(2, "0");
-    return `00:${minutes}:${seconds}`;
-  };
-
-  const handleNextPrompt = () => {
-    Animated.timing(slideAnim, {
-      toValue: -width,
-      duration: 300,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: true,
-    }).start(() => {
-      const nextIndex = (index + 1) % promptsList.length;
-      const nextPrompt = promptsList[nextIndex];
-
-      Speech.stop();
-      setIndex(nextIndex);
-      setCurrentPrompt(nextPrompt);
-      setSelectedAnswer(null);
-      slideAnim.setValue(width);
-
-      Speech.speak(nextPrompt.message, { language: "en", rate: 0.9 });
-
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    });
-  };
-
-  const handleComplete = () => setModalVisible(true);
-
-  const checkAnswer = () => {
-    const correct = currentPrompt.answer;
-    if (selectedAnswer === correct) {
-      setScore((prev) => prev + 1);
-      const msg =
-        motivationalMessages[
-          Math.floor(Math.random() * motivationalMessages.length)
-        ];
-      Alert.alert("Congratulations", msg);
-    } else {
-      Alert.alert("Oops!", "That’s not quite right. Try the next one!");
-    }
-    setModalVisible(false);
-    handleNextPrompt();
-  };
-
-  if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <AppText>Loading your prompts...</AppText>
-      </View>
-    );
-  }
-
-  if (!currentPrompt) {
-    return (
-      <View style={styles.centered}>
-        <AppText style={{ textAlign: "center" }}>
-          No prompt data found. Please complete the quiz to begin your session.
-        </AppText>
-      </View>
-    );
-  }
+  const pieData = Object.keys(categoryScores).map((type) => ({
+    name: type,
+    population: categoryScores[type].correct,
+    color:
+      type === "Recall"
+        ? "#47b39c"
+        : type === "Analysis"
+        ? "#ffc154"
+        : "#fc6b56",
+    legendFontColor: "#333",
+    legendFontSize: wp("3.8%"),
+  }));
 
   return (
     <ImageBackground
-      source={require("../../assets/Prompt.png")}
+      source={require("../../assets/Homepage.png")}
       style={styles.background}
       resizeMode="cover"
     >
-      <Screen style={styles.container}>
-        <View style={styles.contentWrapper}>
-          <AppText style={styles.timer}>{formatTime(secondsElapsed)}</AppText>
-          <Progress.Bar
-            progress={(index + 1) / promptsList.length}
-            width={width * 0.8}
-            color="#21b524"
-            style={{ marginBottom: 20 }}
-          />
-          <AppText style={styles.score}>Score: {score}</AppText>
+      <AppText style={styles.name}>SmartStride</AppText>
 
-          <View style={styles.promptBox}>
-            <Animated.View
-              style={[
-                styles.animatedWrapper,
-                { transform: [{ translateX: slideAnim }] },
-              ]}
-            >
-              <AppText style={styles.text}>{currentPrompt.message}</AppText>
-            </Animated.View>
-          </View>
+      <Screen style={styles.overlay}>
+        <View style={styles.centerContent}>
+          <AppText style={styles.text}>Welcome Back!</AppText>
+          <AppText style={styles.subtitle}>Keep Going - Don't give up</AppText>
 
-          <View style={styles.buttonRow}>
-            <AppButton
-              title="SKIP"
-              onPress={handleNextPrompt}
-              style={styles.buttonLeft}
-              textStyle={{ color: colors.primary }}
-            />
-            <AppButton
-              title="COMPLETE"
-              onPress={handleComplete}
-              style={styles.buttonRight}
+          <View style={styles.chartContainer}>
+            <PieChart
+              data={pieData}
+              width={screenWidth}
+              height={hp("30%")}
+              chartConfig={{
+                color: () => "#000",
+                labelColor: () => "#333",
+              }}
+              accessor={"population"}
+              backgroundColor={"transparent"}
+              paddingLeft={"0"}
+              center={[30, 0]}
+              absolute
+              hasLegend={true}
             />
           </View>
 
-          <TouchableOpacity style={styles.greenCircle} onPress={toggleTimer}>
-            <AntDesign
-              name={isRunning ? "stepforward" : "pause"}
-              size={60}
-              color={colors.white}
+          <View style={styles.buttonGroup}>
+            <AppButton
+              title="Start Session"
+              onPress={() => console.log("Start pressed")}
+              style={styles.buttonPrimary}
+              textStyle={{ fontSize: wp("6%") }}
             />
-          </TouchableOpacity>
+            <AppButton
+              title="Retake Test"
+              onPress={() =>
+                Alert.alert(
+                  "Retake Test?",
+                  "This will erase previous results.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Yes",
+                      onPress: async () => {
+                        await AsyncStorage.removeItem("quizResults");
+                        navigation.navigate("Quiz");
+                      },
+                    },
+                  ]
+                )
+              }
+              style={styles.buttonOutline}
+              textStyle={{ color: colors.primary, fontSize: wp("6%") }}
+            />
+          </View>
         </View>
-
-        {/* Answer Modal */}
-        <Modal visible={modalVisible} animationType="slide" transparent={true}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
-              <AppText style={styles.modalQuestion}>
-                {currentPrompt.message}
-              </AppText>
-              {currentPrompt.options?.map((option, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={[
-                    styles.optionButton,
-                    selectedAnswer === option[0] && styles.optionSelected,
-                  ]}
-                  onPress={() => setSelectedAnswer(option[0])}
-                >
-                  <AppText>{option}</AppText>
-                </TouchableOpacity>
-              ))}
-              <AppButton title="Submit" onPress={checkAnswer} />
-            </View>
-          </View>
-        </Modal>
       </Screen>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, width: "100%", height: "100%" },
-  container: { flex: 1, justifyContent: "center", alignItems: "center" },
-  contentWrapper: { alignItems: "center", justifyContent: "center" },
-  promptBox: {
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: "#000",
-    width: width * 0.9,
-    height: height * 0.3,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: height * 0.05,
-    overflow: "hidden",
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
   },
-  animatedWrapper: {
-    width: width * 0.9,
+  name: {
     position: "absolute",
+    top: hp("9%"),
+    alignSelf: "center",
+    color: colors.primary,
+    fontWeight: "bold",
+    fontSize: wp("6.5%"),
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: width * 0.05,
+    paddingTop: hp("5%"),
+    paddingBottom: hp("10%"),
+  },
+  centerContent: {
+    alignItems: "center",
+    paddingHorizontal: wp("5%"),
+    transform: [{ translateY: hp("8%") }],
   },
   text: {
     color: colors.darkGrey,
+    fontSize: wp("11%"),
     textAlign: "center",
-    fontSize: width * 0.06,
+    fontFamily: "Montserrat_700Bold",
     fontWeight: "bold",
   },
-  timer: {
-    fontSize: width * 0.1,
-    fontWeight: "bold",
+  subtitle: {
+    marginTop: hp("1%"),
+    fontSize: wp("5%"),
     color: colors.darkGrey,
-    marginBottom: 10,
+    textAlign: "center",
+    paddingHorizontal: wp("8%"),
+    fontFamily: "Montserrat_400Regular",
   },
-  score: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: colors.darkGrey,
+  chartContainer: {
+    marginTop: hp("4%"),
+    width: "100%",
+    alignItems: "center",
+    paddingLeft: wp("10%"),
   },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: width * 0.9,
+  buttonGroup: {
+    marginTop: hp("7%"),
+    width: wp("80%"),
+    alignSelf: "center",
   },
-  buttonLeft: {
-    flex: 1,
-    marginRight: 10,
+  buttonPrimary: {
+    backgroundColor: colors.secondary,
+    marginBottom: hp("2%"),
+    height: hp("8%"),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonOutline: {
     backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: "#000",
-  },
-  buttonRight: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  greenCircle: {
-    width: width * 0.3,
-    height: width * 0.3,
-    borderRadius: (width * 0.3) / 2,
-    backgroundColor: "#21b524",
-    marginTop: 50,
-    alignSelf: "center",
+    height: hp("8%"),
     justifyContent: "center",
     alignItems: "center",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalBox: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
-    width: "80%",
-    alignItems: "center",
-  },
-  modalQuestion: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  optionButton: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    marginBottom: 10,
-    width: "100%",
-    alignItems: "center",
-  },
-  optionSelected: {
-    backgroundColor: "#d0f0c0",
-    borderColor: "#21b524",
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 30,
   },
 });
 
-export default Promptpage;
+export default Homepage;

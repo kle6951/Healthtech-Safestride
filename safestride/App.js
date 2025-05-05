@@ -1,3 +1,4 @@
+// App.js
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -7,8 +8,6 @@ import Promptpage from "./app/screens/Promptpage";
 import Entrypage from "./app/screens/Entrypage";
 import Quizpage from "./app/screens/Quizpage";
 import Homepage from "./app/screens/Homepage";
-import { ActivityIndicator } from "react-native";
-import colors from "./app/config/colors";
 
 const Stack = createNativeStackNavigator();
 
@@ -16,26 +15,19 @@ export default function App() {
   const [initialRoute, setInitialRoute] = useState(null);
 
   useEffect(() => {
-    const checkStoredResults = async () => {
+    const checkIfFirstTime = async () => {
       try {
-        const storedResults = await AsyncStorage.getItem("quizResults");
-        if (storedResults) {
-          setInitialRoute("Home");
-        } else {
-          setInitialRoute("Welcome");
-        }
-      } catch (error) {
-        console.error("Failed to load quiz results", error);
-        setInitialRoute("Welcome"); // fallback
+        const result = await AsyncStorage.getItem("quizResults");
+        setInitialRoute(result ? "Home" : "Welcome");
+      } catch (e) {
+        console.error("Error reading quiz result from storage", e);
+        setInitialRoute("Welcome");
       }
     };
-
-    checkStoredResults();
+    checkIfFirstTime();
   }, []);
 
-  if (!initialRoute) {
-    return <ActivityIndicator size="large" color={colors.primary} />;
-  }
+  if (!initialRoute) return null; // Or <AppLoading />
 
   return (
     <NavigationContainer>

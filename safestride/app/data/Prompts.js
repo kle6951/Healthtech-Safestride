@@ -263,11 +263,7 @@ const prompts = [
     type: "Sensory",
     difficulty: "medium",
     message: "Music speeds up and green lights flash. What’s your response?",
-    options: [
-      "A) Walk quickly",
-      "B) Sit down",
-      "C) Cover ears"
-    ],
+    options: ["A) Walk quickly", "B) Sit down", "C) Cover ears"],
     answer: "A",
   },
   {

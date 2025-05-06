@@ -106,6 +106,16 @@ function Promptpage({ navigation }) {
       const filtered = getFilteredPrompts(scores);
       setPrompts(filtered);
       setCurrentPrompt(filtered[0]);
+
+      const firstPrompt = filtered[0];
+      if (firstPrompt) {
+        const fullMessage = `${
+          firstPrompt.message
+        }. Options are: ${firstPrompt.options
+          .map((opt, idx) => `Option ${idx + 1}: ${opt}`)
+          .join(". ")}`;
+        Speech.speak(fullMessage, { language: "en", rate: 0.9 });
+      }
     };
     load();
   }, []);
@@ -215,6 +225,12 @@ function Promptpage({ navigation }) {
     }
   }, [currentPrompt]);
 
+  useEffect(() => {
+    return () => {
+      Speech.stop(); // ✅ Stop speech on component unmount
+    };
+  }, []);
+
   return (
     <ImageBackground
       source={require("../../assets/Prompt.png")}
@@ -227,7 +243,13 @@ function Promptpage({ navigation }) {
             onPress={() =>
               Alert.alert("Exit Session", "Are you sure you want to exit?", [
                 { text: "Cancel", style: "cancel" },
-                { text: "Yes", onPress: () => navigation.goBack() },
+                {
+                  text: "Yes",
+                  onPress: () => {
+                    Speech.stop(); // ✅ Stop speech manually
+                    navigation.goBack();
+                  },
+                },
               ])
             }
           >
@@ -472,6 +494,12 @@ const styles = StyleSheet.create({
   optionSelected: {
     backgroundColor: "#d0f0c0",
     borderColor: "#21b524",
+  },
+  optionText: {
+    fontSize: 16,
+    color: colors.darkGrey,
+    marginTop: 10,
+    textAlign: "center",
   },
 });
 

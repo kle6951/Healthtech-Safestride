@@ -97,6 +97,8 @@ function Promptpage({ navigation }) {
   const [score, setScore] = useState(0);
   const [skippedCount, setSkippedCount] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -107,14 +109,8 @@ function Promptpage({ navigation }) {
       setPrompts(filtered);
       setCurrentPrompt(filtered[0]);
 
-      const firstPrompt = filtered[0];
-      if (firstPrompt) {
-        const fullMessage = `${
-          firstPrompt.message
-        }. Options are: ${firstPrompt.options
-          .map((opt, idx) => `Option ${idx + 1}: ${opt}`)
-          .join(". ")}`;
-        Speech.speak(fullMessage, { language: "en", rate: 0.9 });
+      if (filtered[0]) {
+        Speech.speak(filtered[0].message, { language: "en", rate: 0.9 });
       }
     };
     load();
@@ -161,12 +157,7 @@ function Promptpage({ navigation }) {
       setCurrentPrompt(nextPrompt);
       setSelectedAnswer(null);
       slideAnim.setValue(width);
-      const fullMessage = `${
-        nextPrompt.message
-      }. Options are: ${nextPrompt.options
-        .map((opt, idx) => `Option ${idx + 1}: ${opt}`)
-        .join(". ")}`;
-      Speech.speak(fullMessage, { language: "en", rate: 0.9 });
+      Speech.speak(nextPrompt.message, { language: "en", rate: 0.9 });
 
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -180,30 +171,29 @@ function Promptpage({ navigation }) {
   const handleComplete = () => setModalVisible(true);
 
   const checkAnswer = () => {
-    if (!currentPrompt) return;
+    let earnedPoints = 0;
 
-    if (selectedAnswer === currentPrompt.answer) {
+    if (selectedAnswer === "Easy") {
+      earnedPoints = 1;
       setScore((prev) => prev + 1);
-      const msg =
-        motivationalMessages[
-          Math.floor(Math.random() * motivationalMessages.length)
-        ];
-      Alert.alert("Good job!", msg);
-    } else {
-      Alert.alert("Try again", "That’s not the correct answer.");
+    } else if (selectedAnswer === "Just right") {
+      earnedPoints = 0.5;
+      setScore((prev) => prev + 0.5);
     }
 
+    const motivation =
+      motivationalMessages[
+        Math.floor(Math.random() * motivationalMessages.length)
+      ];
+    const fullMessage = `You earned ${earnedPoints} point${
+      earnedPoints === 1 ? "" : "s"
+    }!\n\n${motivation}`;
+
+    setFeedbackMessage(fullMessage);
+    setFeedbackVisible(true);
     setModalVisible(false);
-
-    if (index >= prompts.length - 1) {
-      setIsRunning(false);
-      setCurrentPrompt(null);
-    }
-
-    handleNextPrompt();
   };
 
-  // Save session summary to AsyncStorage
   useEffect(() => {
     const saveResults = async () => {
       const sessionSummary = {
@@ -227,7 +217,7 @@ function Promptpage({ navigation }) {
 
   useEffect(() => {
     return () => {
-      Speech.stop(); // ✅ Stop speech on component unmount
+      Speech.stop();
     };
   }, []);
 
@@ -246,7 +236,7 @@ function Promptpage({ navigation }) {
                 {
                   text: "Yes",
                   onPress: () => {
-                    Speech.stop(); // ✅ Stop speech manually
+                    Speech.stop();
                     navigation.goBack();
                   },
                 },
@@ -278,11 +268,6 @@ function Promptpage({ navigation }) {
                 ]}
               >
                 <AppText style={styles.text}>{currentPrompt.message}</AppText>
-                {currentPrompt.options?.map((option, idx) => (
-                  <AppText key={idx} style={styles.optionText}>
-                    {option}
-                  </AppText>
-                ))}
               </Animated.View>
             </View>
           )}
@@ -312,21 +297,19 @@ function Promptpage({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Answer Modal */}
+        {/* Feedback Modal */}
         <Modal visible={modalVisible} animationType="slide" transparent={true}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
-              <AppText style={styles.modalQuestion}>
-                {currentPrompt?.message}
-              </AppText>
-              {currentPrompt?.options.map((option, idx) => (
+              <AppText style={styles.modalQuestion}>How do you feel?</AppText>
+              {["Easy", "Just right"].map((option, idx) => (
                 <TouchableOpacity
                   key={idx}
                   style={[
                     styles.optionButton,
-                    selectedAnswer === option[0] && styles.optionSelected,
+                    selectedAnswer === option && styles.optionSelected,
                   ]}
-                  onPress={() => setSelectedAnswer(option[0])}
+                  onPress={() => setSelectedAnswer(option)}
                 >
                   <AppText>{option}</AppText>
                 </TouchableOpacity>
@@ -335,8 +318,43 @@ function Promptpage({ navigation }) {
             </View>
           </View>
         </Modal>
+        {/* ✅ Custom Feedback Modal */}
+        <Modal
+          visible={feedbackVisible}
+          animationType="fade"
+          transparent={true}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <AppText style={[styles.modalQuestion, { fontSize: 26 }]}>
+                🎉 Thanks!
+              </AppText>
+              <AppText
+                style={{
+                  fontSize: 18,
+                  textAlign: "center",
+                  marginBottom: 20,
+                  lineHeight: 26,
+                }}
+              >
+                {feedbackMessage}
+              </AppText>
+              <AppButton
+                title="Next"
+                onPress={() => {
+                  setFeedbackVisible(false);
+                  if (index >= prompts.length - 1) {
+                    setIsRunning(false);
+                    setCurrentPrompt(null);
+                  }
+                  handleNextPrompt();
+                }}
+              />
+            </View>
+          </View>
+        </Modal>
 
-        {/* Final Summary Modal */}
+        {/* Final Summary */}
         <Modal
           visible={currentPrompt === null && prompts.length > 0}
           animationType="slide"
@@ -345,7 +363,7 @@ function Promptpage({ navigation }) {
             <View style={styles.modalBox}>
               <AppText style={styles.modalQuestion}>Session Summary</AppText>
               <AppText>
-                🧠 Accuracy: {score} / {prompts.length}
+                🧠 Score: {score.toFixed(1)} / {prompts.length}
               </AppText>
               <AppText>⏱ Duration: {formatTime(secondsElapsed)}</AppText>
               <AppText>⏭ Skipped: {skippedCount}</AppText>
@@ -379,6 +397,7 @@ function Promptpage({ navigation }) {
     </ImageBackground>
   );
 }
+
 const styles = StyleSheet.create({
   background: {
     flex: 1,
@@ -422,7 +441,7 @@ const styles = StyleSheet.create({
   text: {
     color: colors.darkGrey,
     textAlign: "center",
-    fontSize: width * 0.06,
+    fontSize: width * 0.07,
     fontWeight: "bold",
   },
   timer: {
@@ -494,12 +513,6 @@ const styles = StyleSheet.create({
   optionSelected: {
     backgroundColor: "#d0f0c0",
     borderColor: "#21b524",
-  },
-  optionText: {
-    fontSize: 16,
-    color: colors.darkGrey,
-    marginTop: 10,
-    textAlign: "center",
   },
 });
 

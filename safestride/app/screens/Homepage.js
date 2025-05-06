@@ -16,6 +16,7 @@ import Screen from "../components/Screen";
 import colors from "../config/colors";
 import AppButton from "../components/AppButton";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -25,40 +26,42 @@ function Homepage({ route, navigation }) {
   const [categoryScores, setCategoryScores] = useState(null);
   const [totals, setTotals] = useState(null);
 
-  useEffect(() => {
-    const loadResults = async () => {
-      const fromParams = route?.params?.categoryScores;
-      if (fromParams) {
-        setCategoryScores(fromParams);
-        await AsyncStorage.setItem("quizResults", JSON.stringify(fromParams));
-      } else {
-        const saved = await AsyncStorage.getItem("quizResults");
-        if (saved) setCategoryScores(JSON.parse(saved));
-      }
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadResults = async () => {
+        const fromParams = route?.params?.categoryScores;
+        if (fromParams) {
+          setCategoryScores(fromParams);
+          await AsyncStorage.setItem("quizResults", JSON.stringify(fromParams));
+        } else {
+          const saved = await AsyncStorage.getItem("quizResults");
+          if (saved) setCategoryScores(JSON.parse(saved));
+        }
 
-      const history = await AsyncStorage.getItem("sessionHistory");
-      if (history) {
-        const parsed = JSON.parse(history);
-        let score = 0,
-          skipped = 0,
-          duration = 0;
+        const history = await AsyncStorage.getItem("sessionHistory");
+        if (history) {
+          const parsed = JSON.parse(history);
+          let score = 0,
+            skipped = 0,
+            duration = 0;
 
-        parsed.forEach((session) => {
-          score += session.score;
-          skipped += session.skippedCount;
-          duration += session.duration;
-        });
+          parsed.forEach((session) => {
+            score += session.score;
+            skipped += session.skippedCount;
+            duration += session.duration;
+          });
 
-        const formattedTime = new Date(duration * 1000)
-          .toISOString()
-          .substr(11, 8);
+          const formattedTime = new Date(duration * 1000)
+            .toISOString()
+            .substr(11, 8);
 
-        setTotals({ score, skipped, duration, formattedTime });
-      }
-    };
+          setTotals({ score, skipped, duration, formattedTime });
+        }
+      };
 
-    loadResults();
-  }, []);
+      loadResults();
+    }, [route?.params?.categoryScores])
+  );
 
   if (!categoryScores) return null;
 
@@ -118,7 +121,9 @@ function Homepage({ route, navigation }) {
               </View>
               <View style={styles.statItem}>
                 <AppText style={styles.statLabel}>Total Time</AppText>
-                <AppText style={styles.statValue}>{totals.formattedTime}</AppText>
+                <AppText style={styles.statValue}>
+                  {totals.formattedTime}
+                </AppText>
               </View>
             </View>
           )}

@@ -19,8 +19,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const screenWidth = Dimensions.get("window").width;
 
+// ...imports remain unchanged
+
 function Homepage({ route, navigation }) {
   const [categoryScores, setCategoryScores] = useState(null);
+  const [totals, setTotals] = useState(null);
 
   useEffect(() => {
     const loadResults = async () => {
@@ -32,7 +35,28 @@ function Homepage({ route, navigation }) {
         const saved = await AsyncStorage.getItem("quizResults");
         if (saved) setCategoryScores(JSON.parse(saved));
       }
+
+      const history = await AsyncStorage.getItem("sessionHistory");
+      if (history) {
+        const parsed = JSON.parse(history);
+        let score = 0,
+          skipped = 0,
+          duration = 0;
+
+        parsed.forEach((session) => {
+          score += session.score;
+          skipped += session.skippedCount;
+          duration += session.duration;
+        });
+
+        const formattedTime = new Date(duration * 1000)
+          .toISOString()
+          .substr(11, 8);
+
+        setTotals({ score, skipped, duration, formattedTime });
+      }
     };
+
     loadResults();
   }, []);
 
@@ -82,6 +106,23 @@ function Homepage({ route, navigation }) {
             />
           </View>
 
+          {totals && (
+            <View style={styles.summaryBox}>
+              <View style={styles.statItem}>
+                <AppText style={styles.statLabel}>Total Score</AppText>
+                <AppText style={styles.statValue}>{totals.score}</AppText>
+              </View>
+              <View style={styles.statItem}>
+                <AppText style={styles.statLabel}>Total Skipped</AppText>
+                <AppText style={styles.statValue}>{totals.skipped}</AppText>
+              </View>
+              <View style={styles.statItem}>
+                <AppText style={styles.statLabel}>Total Time</AppText>
+                <AppText style={styles.statValue}>{totals.formattedTime}</AppText>
+              </View>
+            </View>
+          )}
+
           <View style={styles.buttonGroup}>
             <AppButton
               title="Start Session"
@@ -117,6 +158,7 @@ function Homepage({ route, navigation }) {
   );
 }
 
+// --- Styles ---
 const styles = StyleSheet.create({
   background: {
     flex: 1,
@@ -164,8 +206,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingLeft: wp("10%"),
   },
+  summaryBox: {
+    marginTop: hp("1%"),
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: wp("90%"),
+    backgroundColor: "#ffffffcc",
+    borderRadius: 12,
+    paddingVertical: hp("2%"),
+    paddingHorizontal: wp("4%"),
+    marginBottom: hp("2%"),
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statLabel: {
+    fontSize: wp("4%"),
+    color: "#444",
+    marginBottom: 4,
+    fontFamily: "Montserrat_400Regular",
+  },
+  statValue: {
+    fontSize: wp("6%"),
+    fontWeight: "bold",
+    color: colors.primary,
+  },
   buttonGroup: {
-    marginTop: hp("7%"),
+    marginTop: hp("1%"),
     width: wp("80%"),
     alignSelf: "center",
   },

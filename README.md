@@ -30,17 +30,6 @@ A cheerful and clear welcome message appears:
 
 Users press “START” button to begin.
 
-
-🧠 Assessment Check (EntryPage.js)
-
-The app asks: “Have you taken the assessment test?”
-
-Two large buttons, “YES” and “NO,” allow users to easily respond.
-
-If “NO” is selected, the user completes a short cognitive test to establish a baseline.
-
-If “YES” is selected, the user skips straight to the cognitive walking challenge.
-
 📝 Cognitive Assessment
 
 Multiple-choice questions are displayed one at a time in large, clearly labeled buttons.
@@ -49,8 +38,8 @@ Users can go back or skip a question at any time, reducing pressure.
 
 🎯 Challenge Task (Prompt Mode)
 
-After the assessment, or directly if “YES” was selected, users are prompted with a challenge
+After the assessment, users are prompted with a challenge
 
-They respond verbally or mentally while walking, then press “COMPLETE” or “SKIP” using large, high-contrast buttons.
+They respond mentally while walking, then press “COMPLETE” or “SKIP” using large, high-contrast buttons.
 
 This intuitive step-by-step process supports both new and returning users, enabling accessible and effective dual-task training that adapts to their needs.

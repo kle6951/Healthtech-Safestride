@@ -20,8 +20,6 @@ import { useFocusEffect } from "@react-navigation/native";
 
 const screenWidth = Dimensions.get("window").width;
 
-// ...imports remain unchanged
-
 function Homepage({ route, navigation }) {
   const [categoryScores, setCategoryScores] = useState(null);
   const [totals, setTotals] = useState(null);

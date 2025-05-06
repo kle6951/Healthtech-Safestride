@@ -151,7 +151,13 @@ function Promptpage({ navigation }) {
       setCurrentPrompt(nextPrompt);
       setSelectedAnswer(null);
       slideAnim.setValue(width);
-      Speech.speak(nextPrompt.message, { language: "en", rate: 0.9 });
+      const fullMessage = `${
+        nextPrompt.message
+      }. Options are: ${nextPrompt.options
+        .map((opt, idx) => `Option ${idx + 1}: ${opt}`)
+        .join(". ")}`;
+      Speech.speak(fullMessage, { language: "en", rate: 0.9 });
+
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 300,
@@ -250,6 +256,11 @@ function Promptpage({ navigation }) {
                 ]}
               >
                 <AppText style={styles.text}>{currentPrompt.message}</AppText>
+                {currentPrompt.options?.map((option, idx) => (
+                  <AppText key={idx} style={styles.optionText}>
+                    {option}
+                  </AppText>
+                ))}
               </Animated.View>
             </View>
           )}
